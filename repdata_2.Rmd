@@ -1,26 +1,33 @@
 ---
-  title: "Storm events in the USA: Economic and population health effects"
+title: 'Economic and population health effects of storm events in the USA'
 output: 
   html_document:
   keep_md: true
 ---
-  
+
+# Economic and population health effects of storm events in the USA
+
 ## Synopsis
 
-
-
+This report contains an analysis of storm data for the United States of America (collected by NOAA) between 1950 and 2011. The report presents the top five most important types of storms in the USA both in terms of population health and economic impact.
 
 ## Data processing
 
+### Read data
 ```{r}
 library('knitr')
 rm(list=ls(all=TRUE))
 setwd('~/Documents/repdata_2/')
-#stormdata <- read.csv(
-#  bzfile('~/Downloads/repdata-data-StormData.csv.bz2'), 
-#  as.is=TRUE
-#)
+stormdata <- read.csv(
+  bzfile('~/Downloads/repdata-data-StormData.csv.bz2'), 
+  as.is=TRUE
+)
 ```
+
+
+### Prepare data for analysing the impact on population health
+
+Impact on population health is collected in the dataset for fatalities and injuries. The following R code aggregates these two types of population health impacts by storm type and merges them together into a data.frame for reporting results. The top five impacts for fatalities and injuries are stored in the R objects `{r} ph1` and `{r} ph2`.
 
 ```{r prepdata}
 pophealth.fatalities <- aggregate(stormdata$FATALITIES, 
@@ -41,16 +48,64 @@ ph1 <- ph[order(-ph$Fatalities),][1:5,]
 ph2 <- ph[order(-ph$Injuries),][1:5,]
 ```
 
+### Prepare data for analysing economy impact of storms
+
+Impact on the economy is collected in the dataset for property and crop damage. Before aggregating this damage by storm type, the data must be transformed into common units as in the following R code.
+
+```{r prepdata2}
+stormdata$pdmg_mult <- 1
+stormdata$pdmg_mult[which(toupper(stormdata$PROPDMGEXP) == 'B')] <- 1000000000
+stormdata$pdmg_mult[which(toupper(stormdata$PROPDMGEXP) == 'M')] <- 1000000
+stormdata$pdmg_mult[which(toupper(stormdata$PROPDMGEXP) == 'K')] <- 1000
+stormdata$crop_mult <- 1
+stormdata$crop_mult[which(toupper(stormdata$CROPDMGEXP) == 'B')] <- 1000000000
+stormdata$crop_mult[which(toupper(stormdata$CROPDMGEXP) == 'M')] <- 1000000
+stormdata$crop_mult[which(toupper(stormdata$CROPDMGEXP) == 'K')] <- 1000
+```
+
+The following R code aggregates these two types of economy impacts by storm type and merges them together into a data.frame for reporting results. The top five impacts for fatalities and injuries are stored in the R objects `{r} ec1` and `{r} ec2`. A third R object `{r} ec3` contains the total economic impact of the two types of damage. 
+
+```{r prepdata3}
+
+economy.property <- aggregate(
+  (stormdata$PROPDMG*stormdata$pdmg_mult)/1000000, 
+  by=list(stormdata$EVTYPE), 
+  FUN=sum
+)
+economy.crop <- aggregate(
+  (stormdata$CROPDMG*stormdata$crop_mult)/1000000, 
+  by=list(stormdata$EVTYPE), 
+  FUN=sum
+)
   
+names(economy.property) <- c('Storm', 'PropertyDamage')
+names(economy.crop) <- c('Storm', 'CropDamage')
+
+# Merge the data by event type and subset top by event types
+ec <- merge(economy.property, economy.crop)
+ec$TotalDamage <- ec$PropertyDamage + ec$CropDamage
+ec1 <- ec[order(-ec$PropertyDamage),][1:5,]
+ec2 <- ec[order(-ec$CropDamage),][1:5,]
+ec3 <- ec[order(-ec$TotalDamage),][1:5,]
+```
+
 ## Results
 
 ### Storm events and population health
 
+The top five storm events in terms of fatalities:
 
-```{r printpophealthdata, echo=TRUE}
+```{r printpophealthdata1, echo=TRUE}
 print(ph1)
+```
+
+The top five storm events in terms of injuries:
+
+```{r printpophealthdata2, echo=TRUE}
 print(ph2)
 ```
+
+Summary of storm impacts on population health. Both fatalities and injuries considered:
 
 ```{r, fig.height=4, echo=TRUE}
 par(mfrow=c(1,2))
@@ -70,6 +125,26 @@ barplot(
 
 ### Storm events and the economy
 
+There are two main economic impacts of storms in the USA, namely property and crop damage. 
 
+The top 5 storm types by property damage are:
+```{r economyimpact1, echo=TRUE}
+print(ec1)
+```
 
-  
+The top 5 storm types in terms of crop damage are:
+```{r economyimpact2, echo=TRUE}
+print(ec2)
+```
+
+When combined together, the types of storm events that cause the most negative impact on the USA economy are:
+```{r economyimpact3, echo=TRUE}
+print(ec3)
+```
+
+```{r, echo=FALSE}
+econ_impact_1 <- ec3$Storm[1]
+econ_impact_2 <- ec3$Storm[2]
+```
+
+The type of storm that causes the most total damage to the economy in the USA is `r econ_impact_1`, followed by `r econ_impact_2`.
