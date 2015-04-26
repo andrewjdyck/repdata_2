@@ -1,0 +1,29 @@
+---
+  title: "Storm events in the USA: Economic and population health effects"
+output: 
+  html_document:
+  keep_md: true
+---
+  
+## Synopsis
+
+
+
+
+## Data processing
+  
+
+  
+
+  
+  
+## Results
+  
+
+### Storm events and population health
+
+### Storm events and the economy
+
+
+
+  
