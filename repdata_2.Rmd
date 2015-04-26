@@ -11,8 +11,11 @@ output:
 
 
 ## Data processing
-  
 
+```{r}
+setwd('~/Documents/repdata_2/')
+stormdata <- read.csv('~/Downloads/repdata-data-StormData.csv')
+```
   
 
   
