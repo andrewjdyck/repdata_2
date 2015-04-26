@@ -13,17 +13,60 @@ output:
 ## Data processing
 
 ```{r}
+library('knitr')
+rm(list=ls(all=TRUE))
 setwd('~/Documents/repdata_2/')
-stormdata <- read.csv('~/Downloads/repdata-data-StormData.csv')
+#stormdata <- read.csv(
+#  bzfile('~/Downloads/repdata-data-StormData.csv.bz2'), 
+#  as.is=TRUE
+#)
 ```
-  
 
-  
+```{r prepdata}
+pophealth.fatalities <- aggregate(stormdata$FATALITIES, 
+  by=list(stormdata$EVTYPE), 
+  FUN=sum
+)
+pophealth.injuries <- aggregate(stormdata$INJURIES, 
+  by=list(stormdata$EVTYPE), 
+  FUN=sum
+)
+
+names(pophealth.fatalities) <- c('Storm', 'Fatalities')
+names(pophealth.injuries) <- c('Storm', 'Injuries')
+
+# Merge the data by event type and subset top by event types
+ph <- merge(pophealth.fatalities, pophealth.injuries)
+ph1 <- ph[order(-ph$Fatalities),][1:5,]
+ph2 <- ph[order(-ph$Injuries),][1:5,]
+```
+
   
 ## Results
-  
 
 ### Storm events and population health
+
+
+```{r printpophealthdata, echo=TRUE}
+print(ph1)
+print(ph2)
+```
+
+```{r, fig.height=4, echo=TRUE}
+par(mfrow=c(1,2))
+barplot(
+  ph1$Fatalities, 
+  names.arg=ph1$Storm, 
+  xlab='Fatalities', 
+  main='Top 5 Most Deadly Storm Events'
+)
+barplot(
+  ph2$Injuries, 
+  names.arg=ph1$Storm,
+  xlab='Injuries',
+  main='Top 5 Storm Types Causing Injury'
+)
+```
 
 ### Storm events and the economy
 
