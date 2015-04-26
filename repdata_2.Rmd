@@ -5,8 +5,6 @@ output:
   keep_md: true
 ---
 
-# Economic and population health effects of storm events in the USA
-
 ## Synopsis
 
 This report contains an analysis of storm data for the United States of America (collected by NOAA) between 1950 and 2011. The report presents the top five most important types of storms in the USA both in terms of population health and economic impact.
